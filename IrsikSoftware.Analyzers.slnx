@@ -2,5 +2,6 @@
   <Folder Name="/src/">
     <Project Path="src/IrsikSoftware.Analyzers.Core/IrsikSoftware.Analyzers.Core.csproj" />
     <Project Path="src/IrsikSoftware.Analyzers.Unity/IrsikSoftware.Analyzers.Unity.csproj" />
+    <Project Path="src/IrsikSoftware.Analyzers.CodeFixes/IrsikSoftware.Analyzers.CodeFixes.csproj" />
   </Folder>
 </Solution>
