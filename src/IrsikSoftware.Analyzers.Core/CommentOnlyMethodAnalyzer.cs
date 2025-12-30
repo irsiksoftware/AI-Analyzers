@@ -7,33 +7,15 @@ using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace IrsikSoftware.Analyzers.Core
 {
+	/// <summary>
+	/// Analyzer that detects methods containing only comments with no actual statements.
+	/// These often indicate dead code or incomplete implementations left by AI agents.
+	/// </summary>
 	[DiagnosticAnalyzer(LanguageNames.CSharp)]
 	public class CommentOnlyMethodAnalyzer : DiagnosticAnalyzer
 	{
-		public const string DiagnosticId = "ISU0001";
-
-		private static readonly LocalizableString Title =
-			"Method body contains only comments";
-
-		private static readonly LocalizableString MessageFormat =
-			"Method '{0}' contains only comments - consider removing or implementing";
-
-		private static readonly LocalizableString Description =
-			"Methods that contain only comments are effectively empty and may indicate dead code or incomplete implementation.";
-
-		private const string Category = "Maintainability";
-
-		private static readonly DiagnosticDescriptor Rule = new(
-			DiagnosticId,
-			Title,
-			MessageFormat,
-			Category,
-			DiagnosticSeverity.Warning,
-			isEnabledByDefault: true,
-			description: Description);
-
 		public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics
-			=> ImmutableArray.Create(Rule);
+			=> ImmutableArray.Create(DiagnosticDescriptors.CommentOnlyMethod);
 
 		public override void Initialize(AnalysisContext context)
 		{
@@ -69,7 +51,7 @@ namespace IrsikSoftware.Analyzers.Core
 			if (hasComments)
 			{
 				var diagnostic = Diagnostic.Create(
-					Rule,
+					DiagnosticDescriptors.CommentOnlyMethod,
 					method.Identifier.GetLocation(),
 					method.Identifier.Text);
 

@@ -44,11 +44,9 @@ jobs:
 
       - name: Restore
         run: dotnet restore IrsikSoftware.Analyzers.slnx
-        working-directory: F:\Code\AI-Analyzers
 
       - name: Build
         run: dotnet build IrsikSoftware.Analyzers.slnx -c Release --no-restore -p:Version=${{ steps.version.outputs.version }}
-        working-directory: F:\Code\AI-Analyzers
 
       - name: Copy DLLs to UPM Package
         shell: pwsh
@@ -66,7 +64,6 @@ jobs:
 
           Write-Host "Copied DLLs to UPM package:"
           Get-ChildItem $upmAnalyzersDir
-        working-directory: F:\Code\AI-Analyzers
 
       - name: Update UPM package.json version
         if: steps.version.outputs.is_release == 'true'
@@ -76,21 +73,19 @@ jobs:
           $packageJson.version = "${{ steps.version.outputs.version }}"
           $packageJson | ConvertTo-Json -Depth 10 | Set-Content "packages/com.irsik.analyzers.unity/package.json"
           Write-Host "Updated package.json version to ${{ steps.version.outputs.version }}"
-        working-directory: F:\Code\AI-Analyzers
 
       - name: Upload NuGet Packages
         uses: actions/upload-artifact@v4
         with:
           name: nuget-packages
-          path: |
-            F:\Code\AI-Analyzers\src\**\bin\Release\*.nupkg
+          path: src/**/bin/Release/*.nupkg
           retention-days: 30
 
       - name: Upload UPM Package
         uses: actions/upload-artifact@v4
         with:
           name: upm-package
-          path: F:\Code\AI-Analyzers\packages\com.irsik.analyzers.unity\
+          path: packages/com.irsik.analyzers.unity/
           retention-days: 30
 
   release:
