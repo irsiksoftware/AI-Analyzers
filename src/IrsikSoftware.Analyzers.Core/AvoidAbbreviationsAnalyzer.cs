@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -14,6 +15,7 @@ namespace IrsikSoftware.Analyzers.Core
 	public class AvoidAbbreviationsAnalyzer : DiagnosticAnalyzer
 	{
 		// Known abbreviations and their preferred full names
+		// Excludes common idiomatic abbreviations (args, params) and useful prefixes (num, init)
 		private static readonly ImmutableDictionary<string, string> Abbreviations =
 			ImmutableDictionary<string, string>.Empty
 				.Add("rng", "randomNumberGenerator")
@@ -31,10 +33,7 @@ namespace IrsikSoftware.Analyzers.Core
 				.Add("dst", "destination")
 				.Add("tmp", "temp")
 				.Add("ptr", "pointer")
-				.Add("num", "number")
 				.Add("val", "value")
-				.Add("obj", "object")
-				.Add("str", "string")
 				.Add("len", "length")
 				.Add("pos", "position")
 				.Add("vel", "velocity")
@@ -43,10 +42,7 @@ namespace IrsikSoftware.Analyzers.Core
 				.Add("xfrm", "transform")
 				.Add("cb", "callback")
 				.Add("evt", "event")
-				.Add("args", "arguments")
-				.Add("params", "parameters")
 				.Add("impl", "implementation")
-				.Add("init", "initialize")
 				.Add("calc", "calculate")
 				.Add("proc", "process");
 
@@ -102,6 +98,10 @@ namespace IrsikSoftware.Analyzers.Core
 		{
 			var name = identifier.ValueText;
 
+			// Skip UPPER_SNAKE_CASE identifiers (constants)
+			if (IsUpperSnakeCase(name))
+				return;
+
 			// Strip leading underscore for field naming convention
 			var checkName = name.TrimStart('_');
 
@@ -125,6 +125,30 @@ namespace IrsikSoftware.Analyzers.Core
 					return;
 				}
 			}
+		}
+
+		private static bool IsUpperSnakeCase(string name)
+		{
+			// UPPER_SNAKE_CASE: all uppercase letters, digits, and underscores
+			// Must have at least one letter
+			if (string.IsNullOrEmpty(name))
+				return false;
+
+			bool hasLetter = false;
+			foreach (char c in name)
+			{
+				if (char.IsLetter(c))
+				{
+					if (!char.IsUpper(c))
+						return false;
+					hasLetter = true;
+				}
+				else if (c != '_' && !char.IsDigit(c))
+				{
+					return false;
+				}
+			}
+			return hasLetter;
 		}
 
 		private static bool IsAbbreviationMatch(string name, string abbreviation)

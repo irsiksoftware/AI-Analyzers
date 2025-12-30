@@ -41,10 +41,7 @@ namespace IrsikSoftware.Analyzers.CodeFixes
 			{ "dst", "destination" },
 			{ "tmp", "temp" },
 			{ "ptr", "pointer" },
-			{ "num", "number" },
 			{ "val", "value" },
-			{ "obj", "object" },
-			{ "str", "string" },
 			{ "len", "length" },
 			{ "pos", "position" },
 			{ "vel", "velocity" },
@@ -53,10 +50,7 @@ namespace IrsikSoftware.Analyzers.CodeFixes
 			{ "xfrm", "transform" },
 			{ "cb", "callback" },
 			{ "evt", "event" },
-			{ "args", "arguments" },
-			{ "params", "parameters" },
 			{ "impl", "implementation" },
-			{ "init", "initialize" },
 			{ "calc", "calculate" },
 			{ "proc", "process" }
 		};
