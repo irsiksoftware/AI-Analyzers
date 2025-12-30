@@ -32,6 +32,9 @@ namespace IrsikSoftware.Analyzers.Core
 		/// <summary>VContainer [Inject] method should be named 'Construct'.</summary>
 		public const string InjectMethodNaming = "ISU0003";
 
+		/// <summary>Avoid abbreviations like 'rng' - use full name 'randomNumberGenerator'.</summary>
+		public const string AvoidAbbreviations = "ISU0004";
+
 		// ===========================================
 		// Performance - Unity Core (1000-1099)
 		// ===========================================

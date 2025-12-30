@@ -45,6 +45,16 @@ namespace IrsikSoftware.Analyzers.Core
 			description: "Standardizes the DI injection method naming across the codebase.",
 			helpLinkUri: GetHelpLink(DiagnosticIds.InjectMethodNaming));
 
+		public static readonly DiagnosticDescriptor AvoidAbbreviations = new(
+			DiagnosticIds.AvoidAbbreviations,
+			title: "Avoid cryptic abbreviations",
+			messageFormat: "Identifier '{0}' uses abbreviation - prefer full name (e.g., 'randomNumberGenerator' instead of 'rng')",
+			category: DiagnosticCategories.Maintainability,
+			defaultSeverity: DiagnosticSeverity.Warning,
+			isEnabledByDefault: true,
+			description: "Abbreviations like 'rng' are not self-documenting. Use descriptive names like 'randomNumberGenerator'.",
+			helpLinkUri: GetHelpLink(DiagnosticIds.AvoidAbbreviations));
+
 		// ===========================================
 		// Performance - Unity Core (ISU1000-ISU1099)
 		// ===========================================
