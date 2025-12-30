@@ -55,6 +55,16 @@ namespace IrsikSoftware.Analyzers.Core
 			description: "Abbreviations like 'rng' are not self-documenting. Use descriptive names like 'randomNumberGenerator'.",
 			helpLinkUri: GetHelpLink(DiagnosticIds.AvoidAbbreviations));
 
+		public static readonly DiagnosticDescriptor StateEnumConvention = new(
+			DiagnosticIds.StateEnumConvention,
+			title: "State enum should be in /Scripts/Enums/",
+			messageFormat: "State enum '{0}' should be moved to '{1}'",
+			category: DiagnosticCategories.Maintainability,
+			defaultSeverity: DiagnosticSeverity.Warning,
+			isEnabledByDefault: true,
+			description: "State enums should be located in the /Scripts/Enums/ folder for consistency.",
+			helpLinkUri: GetHelpLink(DiagnosticIds.StateEnumConvention));
+
 		// ===========================================
 		// Performance - Unity Core (ISU1000-ISU1099)
 		// ===========================================

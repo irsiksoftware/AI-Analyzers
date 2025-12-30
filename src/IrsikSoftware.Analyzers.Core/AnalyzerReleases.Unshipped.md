@@ -9,6 +9,7 @@ ISU0001 | IrsikSoftware.Maintainability | Warning | Method body contains only co
 ISU0002 | IrsikSoftware.Maintainability | Warning | Prefer nameof() for type references
 ISU0003 | IrsikSoftware.Maintainability | Info | Inject method naming convention
 ISU0004 | IrsikSoftware.Maintainability | Warning | Avoid cryptic abbreviations
+ISU0005 | IrsikSoftware.Maintainability | Warning | State enum should be in /Scripts/Enums/
 ISU1000 | IrsikSoftware.Performance | Warning | Camera.main in Update methods
 ISU1001 | IrsikSoftware.Performance | Warning | Find methods in Update
 ISU1002 | IrsikSoftware.Performance | Warning | GetComponent in Update

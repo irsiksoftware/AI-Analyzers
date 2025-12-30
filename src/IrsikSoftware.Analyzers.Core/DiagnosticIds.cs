@@ -35,6 +35,9 @@ namespace IrsikSoftware.Analyzers.Core
 		/// <summary>Avoid abbreviations like 'rng' - use full name 'randomNumberGenerator'.</summary>
 		public const string AvoidAbbreviations = "ISU0004";
 
+		/// <summary>State enum should follow {ClassName}State naming and be in /Scripts/Enums/.</summary>
+		public const string StateEnumConvention = "ISU0005";
+
 		// ===========================================
 		// Performance - Unity Core (1000-1099)
 		// ===========================================
