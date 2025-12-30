@@ -1,0 +1,22 @@
+{
+  "name": "com.irsik.analyzers.unity",
+  "version": "0.0.0.1",
+  "displayName": "IrsikSoftware Unity Analyzers",
+  "description": "Roslyn analyzers for Unity projects - catches AI-agent code smells and enforces code quality standards",
+  "unity": "2022.3",
+  "keywords": [
+    "analyzers",
+    "roslyn",
+    "code-quality",
+    "linting"
+  ],
+  "author": {
+    "name": "IrsikSoftware",
+    "url": "https://github.com/irsik"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/irsik/AI-Analyzers.git"
+  },
+  "license": "MIT"
+}

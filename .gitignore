@@ -1,0 +1,69 @@
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# NuGet
+*.nupkg
+*.snupkg
+.nuget/
+*.nuget.props
+*.nuget.targets
+
+# UPM packages - include these (must come before exclusions)
+!/packages/
+!/packages/com.irsik.*/
+!/packages/com.irsik.*/**
+
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.rsuser
+*.csproj.user
+*.vspx
+*.vspscc
+*.vssscc
+
+# Rider
+.idea/
+*.sln.iml
+
+# Build
+*.dll
+*.exe
+*.pdb
+*.cache
+*.ilk
+*.meta
+*.obj
+*.iobj
+*.ipdb
+*.idb
+
+# Test results
+[Tt]est[Rr]esult*/
+*.trx
+*.coverage
+*.coveragexml
+
+# Misc
+*.log
+*.tmp
+*.temp
+*.bak
+*.swp
+*~
+.DS_Store
+Thumbs.db
+
+# UPM package exceptions (allow DLLs and meta files for Unity packages)
+!/packages/com.irsik.*/**/*.dll
+!/packages/com.irsik.*/**/*.meta

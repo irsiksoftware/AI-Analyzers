@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+
+    <!-- Analyzer settings -->
+    <IsRoslynComponent>true</IsRoslynComponent>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <DevelopmentDependency>true</DevelopmentDependency>
+
+    <!-- NuGet package metadata -->
+    <PackageId>IrsikSoftware.Analyzers.Unity</PackageId>
+    <Version>0.0.0.1</Version>
+    <Authors>IrsikSoftware</Authors>
+    <Description>Roslyn analyzers for Unity projects - catches AI-agent code smells and Unity-specific issues</Description>
+    <PackageTags>analyzers;roslyn;unity;code-quality</PackageTags>
+    <RepositoryUrl>https://github.com/irsik/AI-Analyzers</RepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.8.0" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\IrsikSoftware.Analyzers.Core\IrsikSoftware.Analyzers.Core.csproj" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Pack both this analyzer and Core into the package -->
+    <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+    <None Include="$(OutputPath)\IrsikSoftware.Analyzers.Core.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+  </ItemGroup>
+
+</Project>
