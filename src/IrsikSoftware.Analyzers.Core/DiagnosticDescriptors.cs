@@ -219,6 +219,16 @@ namespace IrsikSoftware.Analyzers.Core
 			description: "Pure C# services should use VContainer's ITickable interface instead of MonoBehaviour Update patterns.",
 			helpLinkUri: GetHelpLink(DiagnosticIds.PreferITickable));
 
+		public static readonly DiagnosticDescriptor MissingResolverInConstructor = new(
+			DiagnosticIds.MissingResolverInConstructor,
+			title: "IObjectResolver missing in constructor",
+			messageFormat: "{0} '{1}' uses resolver.Instantiate but {2} is missing IObjectResolver parameter",
+			category: DiagnosticCategories.Design,
+			defaultSeverity: DiagnosticSeverity.Error,
+			isEnabledByDefault: true,
+			description: "Classes that use IObjectResolver.Instantiate() must receive the resolver through all constructors or [Inject] methods to avoid null reference exceptions.",
+			helpLinkUri: GetHelpLink(DiagnosticIds.MissingResolverInConstructor));
+
 		// ===========================================
 		// Determinism - Simulation (ISU4000-ISU4099)
 		// ===========================================

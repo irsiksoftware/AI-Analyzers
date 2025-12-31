@@ -29,7 +29,7 @@ namespace IrsikSoftware.Analyzers.CodeFixes
 				DiagnosticIds.AnimatorStringState);
 
 		public sealed override FixAllProvider? GetFixAllProvider() =>
-			null; // Adding fields is complex for batch fixing
+			WellKnownFixAllProviders.BatchFixer;
 
 		public sealed override async Task RegisterCodeFixesAsync(CodeFixContext context)
 		{
@@ -40,7 +40,24 @@ namespace IrsikSoftware.Analyzers.CodeFixes
 			var diagnostic = context.Diagnostics.First();
 			var diagnosticSpan = diagnostic.Location.SourceSpan;
 
-			var literalExpression = root.FindNode(diagnosticSpan) as LiteralExpressionSyntax;
+			// The diagnostic is reported on the invocation, not the literal.
+			// We need to find the string literal argument within the invocation.
+			var node = root.FindNode(diagnosticSpan);
+			LiteralExpressionSyntax? literalExpression = null;
+
+			if (node is InvocationExpressionSyntax invocation)
+			{
+				// Find first string literal argument
+				literalExpression = invocation.ArgumentList.Arguments
+					.Select(a => a.Expression)
+					.OfType<LiteralExpressionSyntax>()
+					.FirstOrDefault(l => l.IsKind(SyntaxKind.StringLiteralExpression));
+			}
+			else if (node is LiteralExpressionSyntax literal)
+			{
+				literalExpression = literal;
+			}
+
 			if (literalExpression == null)
 				return;
 
@@ -75,6 +92,8 @@ namespace IrsikSoftware.Analyzers.CodeFixes
 			// Add appropriate suffix
 			return isAnimator ? baseName + "Hash" : baseName + "Id";
 		}
+
+		private static readonly SyntaxAnnotation LiteralAnnotation = new("PropertyIdLiteral");
 
 		private static async Task<Document> CachePropertyIdAsync(
 			Document document,
@@ -115,6 +134,15 @@ namespace IrsikSoftware.Analyzers.CodeFixes
 			}
 			else
 			{
+				// Annotate the literal so we can find it after tree modification
+				var annotatedLiteral = literalExpression.WithAdditionalAnnotations(LiteralAnnotation);
+				root = root.ReplaceNode(literalExpression, annotatedLiteral);
+
+				// Re-find class declaration in the updated tree
+				classDeclaration = root.DescendantNodes()
+					.OfType<ClassDeclarationSyntax>()
+					.First(c => c.DescendantNodes().Any(n => n.HasAnnotation(LiteralAnnotation)));
+
 				// Create the static readonly field
 				var hashMethod = isAnimator ? "Animator.StringToHash" : "Shader.PropertyToID";
 
@@ -157,24 +185,19 @@ namespace IrsikSoftware.Analyzers.CodeFixes
 				var newClassDeclaration = classDeclaration.WithMembers(
 					classDeclaration.Members.Insert(insertIndex, fieldDeclaration));
 
-				// Replace both the class and the literal
+				// Replace the class
 				newRoot = root.ReplaceNode(classDeclaration, newClassDeclaration);
 
-				// Now find and replace the literal in the updated tree
-				var updatedLiteral = newRoot.DescendantNodes()
-					.OfType<LiteralExpressionSyntax>()
-					.FirstOrDefault(l =>
-						l.Token.ValueText == propertyName &&
-						l.SpanStart >= literalExpression.SpanStart - 100 &&
-						l.SpanStart <= literalExpression.SpanStart + 100);
+				// Find the annotated literal and replace it with field reference
+				var trackedLiteral = newRoot.GetAnnotatedNodes(LiteralAnnotation).FirstOrDefault() as LiteralExpressionSyntax;
 
-				if (updatedLiteral != null)
+				if (trackedLiteral != null)
 				{
 					newRoot = newRoot.ReplaceNode(
-						updatedLiteral,
+						trackedLiteral,
 						SyntaxFactory.IdentifierName(fieldName)
-							.WithLeadingTrivia(updatedLiteral.GetLeadingTrivia())
-							.WithTrailingTrivia(updatedLiteral.GetTrailingTrivia()));
+							.WithLeadingTrivia(trackedLiteral.GetLeadingTrivia())
+							.WithTrailingTrivia(trackedLiteral.GetTrailingTrivia()));
 				}
 			}
 

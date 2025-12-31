@@ -30,7 +30,7 @@ namespace IrsikSoftware.Analyzers.CodeFixes
 			ImmutableArray.Create(DiagnosticIds.AnimatorMagicInteger);
 
 		public sealed override FixAllProvider? GetFixAllProvider() =>
-			null; // Complex multi-file fix, not suitable for batch
+			WellKnownFixAllProviders.BatchFixer;
 
 		public sealed override async Task RegisterCodeFixesAsync(CodeFixContext context)
 		{

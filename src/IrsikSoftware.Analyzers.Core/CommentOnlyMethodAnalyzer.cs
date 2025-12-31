@@ -40,6 +40,25 @@ namespace IrsikSoftware.Analyzers.Core
 				return;
 			}
 
+			// Skip virtual methods - they may be overridden by derived classes
+			if (method.Modifiers.Any(SyntaxKind.VirtualKeyword))
+			{
+				return;
+			}
+
+			// Skip override methods - base class requires the implementation
+			if (method.Modifiers.Any(SyntaxKind.OverrideKeyword))
+			{
+				return;
+			}
+
+			// Skip methods that implement interface members
+			var methodSymbol = context.SemanticModel.GetDeclaredSymbol(method, context.CancellationToken);
+			if (methodSymbol != null && ImplementsInterfaceMember(methodSymbol))
+			{
+				return;
+			}
+
 			// Check if the body contains any comments
 			var hasComments = method.Body.DescendantTrivia()
 				.Any(trivia =>
@@ -57,6 +76,35 @@ namespace IrsikSoftware.Analyzers.Core
 
 				context.ReportDiagnostic(diagnostic);
 			}
+		}
+
+		private static bool ImplementsInterfaceMember(IMethodSymbol methodSymbol)
+		{
+			if (methodSymbol.ContainingType == null)
+			{
+				return false;
+			}
+
+			// Check explicit interface implementations
+			if (methodSymbol.ExplicitInterfaceImplementations.Length > 0)
+			{
+				return true;
+			}
+
+			// Check implicit interface implementations
+			foreach (var iface in methodSymbol.ContainingType.AllInterfaces)
+			{
+				foreach (var member in iface.GetMembers().OfType<IMethodSymbol>())
+				{
+					var implementation = methodSymbol.ContainingType.FindImplementationForInterfaceMember(member);
+					if (SymbolEqualityComparer.Default.Equals(implementation, methodSymbol))
+					{
+						return true;
+					}
+				}
+			}
+
+			return false;
 		}
 	}
 }

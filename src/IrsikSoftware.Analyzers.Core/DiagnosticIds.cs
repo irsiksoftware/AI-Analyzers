@@ -101,6 +101,9 @@ namespace IrsikSoftware.Analyzers.Core
 		/// <summary>Pure C# service should use ITickable instead of Update pattern.</summary>
 		public const string PreferITickable = "ISU3101";
 
+		/// <summary>Class using resolver.Instantiate must have IObjectResolver in all constructors/[Inject] methods.</summary>
+		public const string MissingResolverInConstructor = "ISU3102";
+
 		// ===========================================
 		// Determinism - Simulation (4000-4099)
 		// ===========================================

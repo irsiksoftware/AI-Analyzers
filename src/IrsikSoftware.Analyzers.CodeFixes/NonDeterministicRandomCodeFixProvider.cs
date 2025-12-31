@@ -42,7 +42,7 @@ namespace IrsikSoftware.Analyzers.CodeFixes
 			ImmutableArray.Create(DiagnosticIds.NonDeterministicInSimulate);
 
 		public sealed override FixAllProvider? GetFixAllProvider() =>
-			null; // Complex multi-step fix, not suitable for batch
+			WellKnownFixAllProviders.BatchFixer;
 
 		public sealed override async Task RegisterCodeFixesAsync(CodeFixContext context)
 		{

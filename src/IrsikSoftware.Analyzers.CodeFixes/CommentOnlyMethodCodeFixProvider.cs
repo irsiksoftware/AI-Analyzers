@@ -7,13 +7,14 @@ using IrsikSoftware.Analyzers.Core;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace IrsikSoftware.Analyzers.CodeFixes
 {
 	/// <summary>
 	/// Code fix provider for ISU0001: Comment-only method.
-	/// Removes the method entirely.
+	/// Removes the method entirely if safe to do so.
 	/// </summary>
 	[ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(CommentOnlyMethodCodeFixProvider))]
 	[Shared]
@@ -45,12 +46,61 @@ namespace IrsikSoftware.Analyzers.CodeFixes
 			if (methodDeclaration == null)
 				return;
 
+			// Safety check: skip methods that cannot be safely removed
+			if (!CanSafelyRemoveMethod(methodDeclaration))
+				return;
+
+			// Additional safety check using semantic model
+			var semanticModel = await context.Document.GetSemanticModelAsync(context.CancellationToken).ConfigureAwait(false);
+			if (semanticModel != null)
+			{
+				var methodSymbol = semanticModel.GetDeclaredSymbol(methodDeclaration, context.CancellationToken);
+				if (methodSymbol != null && ImplementsInterfaceMember(methodSymbol))
+					return;
+			}
+
 			context.RegisterCodeFix(
 				CodeAction.Create(
 					title: Title,
 					createChangedDocument: c => RemoveMethodAsync(context.Document, methodDeclaration, c),
 					equivalenceKey: nameof(CommentOnlyMethodCodeFixProvider)),
 				diagnostic);
+		}
+
+		private static bool CanSafelyRemoveMethod(MethodDeclarationSyntax method)
+		{
+			// Cannot remove virtual methods - derived classes may override them
+			if (method.Modifiers.Any(SyntaxKind.VirtualKeyword))
+				return false;
+
+			// Cannot remove override methods - base class requires them
+			if (method.Modifiers.Any(SyntaxKind.OverrideKeyword))
+				return false;
+
+			return true;
+		}
+
+		private static bool ImplementsInterfaceMember(IMethodSymbol methodSymbol)
+		{
+			if (methodSymbol.ContainingType == null)
+				return false;
+
+			// Check explicit interface implementations
+			if (methodSymbol.ExplicitInterfaceImplementations.Length > 0)
+				return true;
+
+			// Check implicit interface implementations
+			foreach (var iface in methodSymbol.ContainingType.AllInterfaces)
+			{
+				foreach (var member in iface.GetMembers().OfType<IMethodSymbol>())
+				{
+					var implementation = methodSymbol.ContainingType.FindImplementationForInterfaceMember(member);
+					if (SymbolEqualityComparer.Default.Equals(implementation, methodSymbol))
+						return true;
+				}
+			}
+
+			return false;
 		}
 
 		private static async Task<Document> RemoveMethodAsync(

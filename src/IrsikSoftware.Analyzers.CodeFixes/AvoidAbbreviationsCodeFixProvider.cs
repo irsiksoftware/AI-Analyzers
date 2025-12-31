@@ -9,15 +9,13 @@ using IrsikSoftware.Analyzers.Core;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Rename;
 
 namespace IrsikSoftware.Analyzers.CodeFixes
 {
 	/// <summary>
 	/// Code fix provider for ISU0004: Avoid abbreviations.
-	/// Renames identifier to use full name.
+	/// Renames identifier to use full name across all references.
 	/// </summary>
 	[ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(AvoidAbbreviationsCodeFixProvider))]
 	[Shared]
@@ -59,7 +57,7 @@ namespace IrsikSoftware.Analyzers.CodeFixes
 			ImmutableArray.Create(DiagnosticIds.AvoidAbbreviations);
 
 		public sealed override FixAllProvider? GetFixAllProvider() =>
-			null; // Rename operations don't work well with batch fixing
+			WellKnownFixAllProviders.BatchFixer;
 
 		public sealed override async Task RegisterCodeFixesAsync(CodeFixContext context)
 		{
@@ -78,7 +76,7 @@ namespace IrsikSoftware.Analyzers.CodeFixes
 			context.RegisterCodeFix(
 				CodeAction.Create(
 					title: $"Rename to '{newName}'",
-					createChangedSolution: c => RenameIdentifierAsync(context.Document, token, newName, c),
+					createChangedSolution: c => RenameSymbolAsync(context.Document, diagnostic, newName, c),
 					equivalenceKey: nameof(AvoidAbbreviationsCodeFixProvider)),
 				diagnostic);
 		}
@@ -130,30 +128,33 @@ namespace IrsikSoftware.Analyzers.CodeFixes
 			return null;
 		}
 
-		private static async Task<Solution> RenameIdentifierAsync(
+		private static async Task<Solution> RenameSymbolAsync(
 			Document document,
-			SyntaxToken token,
+			Diagnostic diagnostic,
 			string newName,
 			CancellationToken cancellationToken)
 		{
+			var root = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
+			if (root == null)
+				return document.Project.Solution;
+
 			var semanticModel = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false);
 			if (semanticModel == null)
 				return document.Project.Solution;
 
-			// Find the symbol for this identifier
-			var symbol = semanticModel.GetDeclaredSymbol(token.Parent!, cancellationToken);
+			var token = root.FindToken(diagnostic.Location.SourceSpan.Start);
+			var node = token.Parent;
+			if (node == null)
+				return document.Project.Solution;
 
-			// If not a declaration, try to get symbol info
-			if (symbol == null)
-			{
-				var symbolInfo = semanticModel.GetSymbolInfo(token.Parent!, cancellationToken);
-				symbol = symbolInfo.Symbol;
-			}
+			// Get the symbol - try declaration first, then symbol info
+			var symbol = semanticModel.GetDeclaredSymbol(node, cancellationToken)
+				?? semanticModel.GetSymbolInfo(node, cancellationToken).Symbol;
 
 			if (symbol == null)
 				return document.Project.Solution;
 
-			// Use Roslyn's rename functionality
+			// Use Renamer to rename all references
 			var newSolution = await Renamer.RenameSymbolAsync(
 				document.Project.Solution,
 				symbol,

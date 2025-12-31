@@ -20,12 +20,10 @@ namespace IrsikSoftware.Analyzers.CodeFixes
 	[Shared]
 	public class PreferNameofCodeFixProvider : CodeFixProvider
 	{
-		private const string Title = "Use nameof()";
-
 		public sealed override ImmutableArray<string> FixableDiagnosticIds =>
 			ImmutableArray.Create(DiagnosticIds.PreferNameof);
 
-		public sealed override FixAllProvider GetFixAllProvider() =>
+		public sealed override FixAllProvider? GetFixAllProvider() =>
 			WellKnownFixAllProviders.BatchFixer;
 
 		public sealed override async Task RegisterCodeFixesAsync(CodeFixContext context)
@@ -37,30 +35,38 @@ namespace IrsikSoftware.Analyzers.CodeFixes
 			var diagnostic = context.Diagnostics.First();
 			var diagnosticSpan = diagnostic.Location.SourceSpan;
 
-			var literalExpression = root.FindNode(diagnosticSpan) as LiteralExpressionSyntax;
-			if (literalExpression == null)
+			// Use FindToken like ISU0004 for more reliable node finding
+			var token = root.FindToken(diagnosticSpan.Start);
+			var literalExpression = token.Parent as LiteralExpressionSyntax;
+			if (literalExpression == null || !literalExpression.IsKind(SyntaxKind.StringLiteralExpression))
 				return;
 
 			// Get the string value from the literal
-			var stringValue = literalExpression.Token.ValueText;
+			var stringValue = token.ValueText;
 
 			context.RegisterCodeFix(
 				CodeAction.Create(
 					title: $"Use nameof({stringValue})",
-					createChangedDocument: c => ReplaceWithNameofAsync(context.Document, literalExpression, stringValue, c),
+					createChangedSolution: c => ReplaceWithNameofAsync(context.Document, diagnostic, stringValue, c),
 					equivalenceKey: nameof(PreferNameofCodeFixProvider)),
 				diagnostic);
 		}
 
-		private static async Task<Document> ReplaceWithNameofAsync(
+		private static async Task<Solution> ReplaceWithNameofAsync(
 			Document document,
-			LiteralExpressionSyntax literalExpression,
+			Diagnostic diagnostic,
 			string identifier,
 			CancellationToken cancellationToken)
 		{
 			var root = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
 			if (root == null)
-				return document;
+				return document.Project.Solution;
+
+			// Use FindToken like ISU0004 for more reliable node finding
+			var token = root.FindToken(diagnostic.Location.SourceSpan.Start);
+			var literalExpression = token.Parent as LiteralExpressionSyntax;
+			if (literalExpression == null || !literalExpression.IsKind(SyntaxKind.StringLiteralExpression))
+				return document.Project.Solution;
 
 			// Create nameof(identifier) expression
 			var nameofExpression = SyntaxFactory.InvocationExpression(
@@ -76,7 +82,8 @@ namespace IrsikSoftware.Analyzers.CodeFixes
 				.WithTrailingTrivia(literalExpression.GetTrailingTrivia());
 
 			var newRoot = root.ReplaceNode(literalExpression, newExpression);
-			return document.WithSyntaxRoot(newRoot);
+			var newDocument = document.WithSyntaxRoot(newRoot);
+			return newDocument.Project.Solution;
 		}
 	}
 }
